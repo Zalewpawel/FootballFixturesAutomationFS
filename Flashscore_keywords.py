@@ -2,7 +2,6 @@ import json
 from robot.api.deco import keyword
 from Utils.Common import log_info
 from robot.libraries.BuiltIn import BuiltIn
-from
 
 class FlashscoreKeywords:
     ROBOT_LIBRARY_SCOPE = "SUITE"
