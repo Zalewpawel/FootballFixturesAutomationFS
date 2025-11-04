@@ -17,7 +17,7 @@ Zbierz tabele dla wielu lig
 
 *** Keywords ***
 Open Suite Browser
-    New Browser    chromium    headless=False    slowMo=50ms
+    New Browser    chromium    headless=False    slowMo=0ms
     New Context    viewport={'width':1280,'height':800}    locale=en-US
     New Page
     Set Browser Timeout    45s

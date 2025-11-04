@@ -3,7 +3,6 @@ from robot.api.deco import keyword
 from Utils.Common import log_info
 from robot.libraries.BuiltIn import BuiltIn
 
-
 class FlashscoreKeywords:
     ROBOT_LIBRARY_SCOPE = "SUITE"
 
@@ -33,20 +32,17 @@ class FlashscoreKeywords:
             log_info(f"I Accept: {e}")
 
     def _open_search_panel(self):
-        # jeśli panel już jest, nie klikamy ponownie
         if self.rk("Run Keyword And Return Status", "Wait For Elements State", "#ls-search-window", "visible", "1s"):
             return
         self.rk("Click", "#search-window")
         ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", "#ls-search-window", "visible", "5s")
         if not ok:
-            # czasem nie ma nagłówka z tym id, więc czekamy na pojawienie się samego inputa
             ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", 'css=input.searchInput__input',
                          "visible", "5s")
         if not ok:
             raise AssertionError("Panel wyszukiwarki się nie otworzył")
 
     def _first_search_input_locator(self):
-        # warianty PL/EN, bez zawężania do #searchWindow
         candidates = [
             'css=input.searchInput__input[placeholder="Wpisz wyszukiwany tekst"]',
             'css=input.searchInput__input[placeholder="Type your search here"]',
@@ -55,7 +51,6 @@ class FlashscoreKeywords:
             'xpath=(//input[contains(@class,"searchInput__input")])[1]',
         ]
         for sel in candidates:
-            # jeżeli jest wiele inputów – użyj pierwszego
             try:
                 cnt = self.rk("Get Element Count", sel)
                 if isinstance(cnt, int) and cnt > 1 and sel.startswith("css="):
@@ -71,12 +66,9 @@ class FlashscoreKeywords:
         log_info(f"Nawiguję do ligi: {league_name}")
         self._accept_cookies()
         self._open_search_panel()
-
         inp = self._first_search_input_locator()
         self.rk("Click", inp)
         self.rk("Fill Text", inp, league_name)
-
-        # kontener wyników i kliknięcie pozycji
         self.rk("Run Keyword And Return Status", "Wait For Elements State", "css=.searchResults", "visible", "10s")
         exact = f'css=.searchResults a.searchResult >> text="{league_name}"'
         first_any = 'css=.searchResults a.searchResult >> nth=0'
@@ -88,13 +80,11 @@ class FlashscoreKeywords:
             raise AssertionError("Nie znaleziono pozycji do kliknięcia w wynikach")
 
     def open_standings_tab(self):
-        # jeśli już jesteśmy na zakładce z tabelą, nic nie rób
         if self.rk("Run Keyword And Return Status", "Wait For Elements State", "css=a.standings_table.selected",
                    "visible", "2s"):
             log_info("Zakładka Tabela już wybrana")
             return
 
-        # kliknij zakładkę Tabela (PL), fallback na Standings/Table (EN)
         targets = [
             "css=a.standings_table",
             'css=a.tabs__tab.standings_table',
@@ -107,77 +97,61 @@ class FlashscoreKeywords:
         for t in targets:
             if self.rk("Run Keyword And Return Status", "Wait For Elements State", t, "visible", "3s"):
                 self.rk("Click", t)
-                # poczekaj aż stanie się „selected”
                 self.rk("Wait For Elements State", "css=a.standings_table.selected", "visible", "10s")
                 log_info("Przełączyłem na zakładkę Tabela")
                 return
-
         raise AssertionError("Nie znalazłem zakładki Tabela/Standings/Table")
 
     @keyword("Read Standings Table")
     def read_standings_table(self):
-        log_info("Czytam tabelę")
+        log_info("Czytam tabelę (Wersja finalna: Mecze i Punkty)")
         try:
             self.open_standings_tab()
-        except Exception:
-            pass
-
+        except Exception as e:
+            log_info(f"Nie można było kliknąć zakładki Tabela (może nie istnieje lub już jest aktywna): {e}")
         root = "css=#tournament-table .ui-table"
         ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", root, "visible", "10s")
         if not ok:
             root = "css=.ui-table"
             ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", root, "visible", "10s")
             if not ok:
-                raise AssertionError("Nie znalazłem .ui-table")
+                log_info("Nie znaleziono kontenera tabeli .ui-table na stronie.")
+                return []
+        sentinel_selector = f"{root} .ui-table__row >> .tableCellParticipant__name >> nth=0"
+        try:
+            self.rk("Wait For Elements State", sentinel_selector, "visible", "10s")
+            log_info("Tabela (nazwy drużyn) w pełni załadowana.")
+        except Exception as e:
+            log_info(f"Nie znaleziono nazw drużyn. Tabela pusta? Błąd: {e}")
+            return []
 
-        headers = []
-        h_cnt = int(self.rk("Get Element Count", f"{root} .ui-table__header .ui-table__headerCell") or 0)
-        for i in range(h_cnt):
-            h_sel = f"{root} .ui-table__header .ui-table__headerCell >> nth={i}"
-            title = ""
+        def get_text(selector):
             try:
-                title = self.rk("Get Attribute", h_sel, "title") or ""
+                val = (self.rk("Get Text", selector) or "").strip()
+                return " ".join(val.split())
             except Exception:
-                pass
-            try:
-                txt = (self.rk("Get Property", h_sel, "innerText") or "").strip()
-            except Exception:
-                txt = ""
-            name = (title or txt or f"Col{i + 1}").strip()
-            headers.append(name)
-
+                return ""
         rows_cnt = int(self.rk("Get Element Count", f"{root} .ui-table__row") or 0)
+        log_info(f"Znaleziono {rows_cnt} wierszy w tabeli. Rozpoczynam pętlę.")
         data = []
         for r in range(rows_cnt):
-            row_base = f"{root} .ui-table__row >> nth={r} .ui-table__cell"
-            cells_cnt = int(self.rk("Get Element Count", row_base) or 0)
-            row_vals = []
-            for c in range(cells_cnt):
-                c_sel = f"{row_base} >> nth={c}"
-                try:
-                    val = (self.rk("Get Property", c_sel, "innerText") or "").strip()
-                    # porządki: spłaszcz białe znaki
-                    val = " ".join(val.split())
-                except Exception:
-                    val = ""
-                row_vals.append(val)
-
-            if not row_vals:
+            row_selector = f"{root} .ui-table__row >> nth={r}"
+            name_sel = f"{row_selector} >> .tableCellParticipant__name"
+            team = get_text(name_sel)
+            if not team:
+                log_info(f"Rząd {r}: Pominięty (brak nazwy drużyny).")
                 continue
-
-            if len(headers) < len(row_vals):
-                headers = headers + [f"Col{j + 1}" for j in range(len(headers), len(row_vals))]
-
-            row_dict = {headers[j] if j < len(headers) else f"Col{j + 1}": row_vals[j]
-                        for j in range(len(row_vals))}
+            cells_selector = f"{row_selector} >> .table__cell"
+            matches_sel = f"{cells_selector} >> nth=2"
+            points_sel = f"{cells_selector} >> nth=8"
+            row_dict = {
+                "Team": team,
+                "Matches": get_text(matches_sel),
+                "Points": get_text(points_sel)
+            }
             data.append(row_dict)
-
-        # ewentualnie wyrzuć kolumny całkowicie puste
-        if data:
-            non_empty_keys = [k for k in data[0].keys()
-                              if any((row.get(k) or "").strip() for row in data)]
-            data = [{k: row.get(k, "") for k in non_empty_keys} for row in data]
-
+            log_info(f"  Pobrano: {row_dict}")
+        log_info(f"Zakończono czytanie tabeli. Pobrano {len(data)} wierszy.")
         return data
 
     @keyword("Collect Standings For Leagues")
