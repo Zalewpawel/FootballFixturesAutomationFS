@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from openpyxl.utils import datetime
+import datetime
 
 def save_league_to_excel(league_name, country, league_table_data, meteo_data, folder_path):
     safe_league_name = league_name.replace(":", "").replace("/", "").replace("\\", "")

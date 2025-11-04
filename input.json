@@ -1,16 +1,16 @@
 {
-"footballFixturesAutomationInput": [
-  {
-"country": "Poland",
-"leagueName": "PKO BP Ekstraklasa",
-"latitude": 52.23,
-"longitude": 21.01
-},
-{
-"country": "England",
-"leagueName": "Premier League",
-"latitude": 51.51,
-"longitude": 0.13
-}
-]
+  "footballFixturesAutomationInput": [
+    {
+      "country": "Poland",
+      "leagueName": "PKO BP Ekstraklasa",
+      "latitude": 52.23,
+      "longitude": 21.01
+    },
+    {
+      "country": "England",
+      "leagueName": "Premier League",
+      "latitude": 51.51,
+      "longitude": 0.13
+    }
+  ]
 }
