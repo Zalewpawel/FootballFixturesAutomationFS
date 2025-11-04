@@ -5,7 +5,7 @@ import os
 
 from robot import run as robot_run
 
-from config import DATA_FOLDER, INPUT_PATH, OUTPUT_PATH
+from Config.config import DATA_FOLDER, INPUT_PATH, OUTPUT_PATH
 from utils.save_excel import save_league_to_excel
 from utils.save_meteo import get_meteo_data
 
