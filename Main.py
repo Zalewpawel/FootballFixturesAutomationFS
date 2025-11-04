@@ -17,3 +17,4 @@ print(f"Pobrano lig: {len(results)}")
 if results:
     print(results[0]["leagueName"])
     print(results[0]["table"][:2])
+    print(results)
