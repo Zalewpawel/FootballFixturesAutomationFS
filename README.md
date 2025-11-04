@@ -31,8 +31,11 @@ Edit Config/input.json to list the leagues you want to process.
 
 Run the following commands in your terminal:
 
+
 pip install -r requirements.txt
+
 rfbrowser init
+
 python Main.py
 
 4. Output
