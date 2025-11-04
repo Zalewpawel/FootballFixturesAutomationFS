@@ -1,0 +1,7 @@
+robotframework
+robotframework-browser
+openmeteo_requests
+requests_cache
+retry_requests
+pandas
+openpyxl

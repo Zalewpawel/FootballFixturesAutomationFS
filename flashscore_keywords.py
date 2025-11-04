@@ -1,6 +1,6 @@
 import json
 from robot.api.deco import keyword
-from Utils.Common import log_info
+from utils.common import log_info
 from robot.libraries.BuiltIn import BuiltIn
 
 class FlashscoreKeywords:

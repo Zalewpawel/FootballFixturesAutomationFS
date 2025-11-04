@@ -1,0 +1,11 @@
+.cache/
+.venv/
+.venv1/
+__pycache__/
+*.pyc
+results.json
+log.html
+report.html
+output.xml
+[0-9][0-9][0-9][0-9]-*
+.DS_Store
