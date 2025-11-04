@@ -7,6 +7,13 @@ from utils.common import log_info
 
 
 class FlashscoreKeywords:
+    """
+    Python keyword library for Robot Framework.
+
+    This class contains all the custom keywords used to interact with
+    the Flashscore website, including navigation, scraping, and data processing.
+    """
+
     ROBOT_LIBRARY_SCOPE = "SUITE"
 
     def __init__(self):
@@ -14,7 +21,7 @@ class FlashscoreKeywords:
 
     @keyword("Load Leagues From File")
     def load_leagues_from_file(self, input_path: str):
-        log_info(f"Wczytuję plik: {input_path}")
+        log_info(f"Loading file: {input_path}")
         with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         if isinstance(data, dict):
@@ -25,9 +32,9 @@ class FlashscoreKeywords:
             leagues = data
         if not isinstance(leagues, list):
             raise ValueError(
-                "Wejście musi być listą lig albo dictem zawierającym listę."
+                "Input must be a list of leagues or a dict containing a list."
             )
-        log_info(f"Ligi do pobrania: {len(leagues)}")
+        log_info(f"Leagues to load: {len(leagues)}")
         return leagues
 
     def _accept_cookies(self):
@@ -40,9 +47,9 @@ class FlashscoreKeywords:
                 "3s",
             ):
                 self.rk("Click", 'text="I Accept"')
-                log_info("Kliknąłem I Accept")
+                log_info("Clicked I Accept")
         except Exception as e:
-            log_info(f"I Accept: {e}")
+            log_info(f"I Accept cookie banner error: {e}")
 
     def _open_search_panel(self):
         if self.rk(
@@ -70,7 +77,7 @@ class FlashscoreKeywords:
                 "5s",
             )
         if not ok:
-            raise AssertionError("Panel wyszukiwarki się nie otworzył")
+            raise AssertionError("Search panel did not open")
 
     def _first_search_input_locator(self):
         candidates = [
@@ -95,11 +102,11 @@ class FlashscoreKeywords:
                 "3s",
             ):
                 return sel
-        raise AssertionError("Nie znalazłem pola wyszukiwania (searchInput__input)")
+        raise AssertionError("Could not find search input field (searchInput__input)")
 
     @keyword("Navigate To League Page")
     def navigate_to_league_page(self, league_name: str):
-        log_info(f"Nawiguję do ligi: {league_name}")
+        log_info(f"Navigating to league: {league_name}")
         self._accept_cookies()
         self._open_search_panel()
         inp = self._first_search_input_locator()
@@ -131,7 +138,7 @@ class FlashscoreKeywords:
         ):
             self.rk("Click", first_any)
         else:
-            raise AssertionError("Nie znaleziono pozycji do kliknięcia w wynikach")
+            raise AssertionError("Could not find any item to click in search results")
 
     def open_standings_tab(self):
         if self.rk(
@@ -141,7 +148,7 @@ class FlashscoreKeywords:
             "visible",
             "2s",
         ):
-            log_info("Zakładka Tabela już wybrana")
+            log_info("Standings tab is already selected")
             return
 
         targets = [
@@ -168,18 +175,18 @@ class FlashscoreKeywords:
                     "visible",
                     "10s",
                 )
-                log_info("Przełączyłem na zakładkę Tabela")
+                log_info("Switched to Standings tab")
                 return
-        raise AssertionError("Nie znalazłem zakładki Tabela/Standings/Table")
+        raise AssertionError("Could not find Tabela/Standings/Table tab")
 
     @keyword("Read Standings Table")
     def read_standings_table(self):
-        log_info("Czytam tabelę (Wersja finalna: Mecze i Punkty)")
+        log_info("Reading standings table (Final version: Matches and Points)")
         try:
             self.open_standings_tab()
         except Exception as e:
             log_info(
-                f"Nie można było kliknąć zakładki Tabela (może nie istnieje lub już jest aktywna): {e}"
+                f"Could not click Standings tab (might not exist or already be active): {e}"
             )
         root = "css=#tournament-table .ui-table"
         ok = self.rk(
@@ -199,16 +206,16 @@ class FlashscoreKeywords:
                 "10s",
             )
             if not ok:
-                log_info("Nie znaleziono kontenera tabeli .ui-table na stronie.")
+                log_info("Could not find table container .ui-table on the page.")
                 return []
         sentinel_selector = (
             f"{root} .ui-table__row >> .tableCellParticipant__name >> nth=0"
         )
         try:
             self.rk("Wait For Elements State", sentinel_selector, "visible", "10s")
-            log_info("Tabela (nazwy drużyn) w pełni załadowana.")
+            log_info("Table (team names) fully loaded.")
         except Exception as e:
-            log_info(f"Nie znaleziono nazw drużyn. Tabela pusta? Błąd: {e}")
+            log_info(f"Could not find team names. Table empty? Error: {e}")
             return []
 
         def get_text(selector):
@@ -219,14 +226,14 @@ class FlashscoreKeywords:
                 return ""
 
         rows_cnt = int(self.rk("Get Element Count", f"{root} .ui-table__row") or 0)
-        log_info(f"Znaleziono {rows_cnt} wierszy w tabeli. Rozpoczynam pętlę.")
+        log_info(f"Found {rows_cnt} rows in table. Starting loop.")
         data = []
         for r in range(rows_cnt):
             row_selector = f"{root} .ui-table__row >> nth={r}"
             name_sel = f"{row_selector} >> .tableCellParticipant__name"
             team = get_text(name_sel)
             if not team:
-                log_info(f"Rząd {r}: Pominięty (brak nazwy drużyny).")
+                log_info(f"Row {r}: Skipped (no team name found).")
                 continue
             cells_selector = f"{row_selector} >> .table__cell"
             matches_sel = f"{cells_selector} >> nth=2"
@@ -237,15 +244,15 @@ class FlashscoreKeywords:
                 "Points": get_text(points_sel),
             }
             data.append(row_dict)
-            log_info(f"  Pobrano: {row_dict}")
-        log_info(f"Zakończono czytanie tabeli. Pobrano {len(data)} wierszy.")
+            log_info(f"  Scraped: {row_dict}")
+        log_info(f"Finished reading table. Scraped {len(data)} rows.")
         return data
 
     @keyword("Collect Standings For Leagues")
     def collect_standings_for_leagues(self, leagues_input):
-        log_info("Start zbierania tabel")
+        log_info("Starting to collect standings.")
         if not isinstance(leagues_input, list):
-            raise ValueError("collect_standings_for_leagues oczekuje listy lig.")
+            raise ValueError("collect_standings_for_leagues expects a list of leagues.")
         results = []
         for item in leagues_input:
             country = (item or {}).get("country", "")
@@ -255,11 +262,11 @@ class FlashscoreKeywords:
             self.navigate_to_league_page(league)
             table = self.read_standings_table()
             results.append({"country": country, "leagueName": league, "table": table})
-        log_info("Koniec zbierania tabel")
+        log_info("Finished collecting standings.")
         return results
 
     @keyword("Save Results Json")
     def save_results_json(self, results, output_path: str):
-        log_info(f"Zapisuję wynik do: {output_path}")
+        log_info(f"Saving results to: {output_path}")
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False)
