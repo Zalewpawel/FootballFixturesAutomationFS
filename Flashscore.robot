@@ -1,6 +1,6 @@
 *** Settings ***
 Library    Browser
-Library    Flashscore_keywords.FlashscoreKeywords
+Library    Flashscore_keywords.FlashscoreKeywordss
 
 Suite Setup     Open Suite Browser
 Suite Teardown  Close Browser
