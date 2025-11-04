@@ -1,7 +1,10 @@
 import json
+
 from robot.api.deco import keyword
-from utils.common import log_info
 from robot.libraries.BuiltIn import BuiltIn
+
+from utils.common import log_info
+
 
 class FlashscoreKeywords:
     ROBOT_LIBRARY_SCOPE = "SUITE"
@@ -15,30 +18,57 @@ class FlashscoreKeywords:
         with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         if isinstance(data, dict):
-            leagues = data.get("footballFixturesAutomationInput", next(iter(data.values())))
+            leagues = data.get(
+                "footballFixturesAutomationInput", next(iter(data.values()))
+            )
         else:
             leagues = data
         if not isinstance(leagues, list):
-            raise ValueError("Wejście musi być listą lig albo dictem zawierającym listę.")
+            raise ValueError(
+                "Wejście musi być listą lig albo dictem zawierającym listę."
+            )
         log_info(f"Ligi do pobrania: {len(leagues)}")
         return leagues
 
     def _accept_cookies(self):
         try:
-            if self.rk("Run Keyword And Return Status", "Wait For Elements State", 'text="I Accept"', "visible", "3s"):
+            if self.rk(
+                "Run Keyword And Return Status",
+                "Wait For Elements State",
+                'text="I Accept"',
+                "visible",
+                "3s",
+            ):
                 self.rk("Click", 'text="I Accept"')
                 log_info("Kliknąłem I Accept")
         except Exception as e:
             log_info(f"I Accept: {e}")
 
     def _open_search_panel(self):
-        if self.rk("Run Keyword And Return Status", "Wait For Elements State", "#ls-search-window", "visible", "1s"):
+        if self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            "#ls-search-window",
+            "visible",
+            "1s",
+        ):
             return
         self.rk("Click", "#search-window")
-        ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", "#ls-search-window", "visible", "5s")
+        ok = self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            "#ls-search-window",
+            "visible",
+            "5s",
+        )
         if not ok:
-            ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", 'css=input.searchInput__input',
-                         "visible", "5s")
+            ok = self.rk(
+                "Run Keyword And Return Status",
+                "Wait For Elements State",
+                "css=input.searchInput__input",
+                "visible",
+                "5s",
+            )
         if not ok:
             raise AssertionError("Panel wyszukiwarki się nie otworzył")
 
@@ -46,7 +76,7 @@ class FlashscoreKeywords:
         candidates = [
             'css=input.searchInput__input[placeholder="Wpisz wyszukiwany tekst"]',
             'css=input.searchInput__input[placeholder="Type your search here"]',
-            'css=input.searchInput__input',
+            "css=input.searchInput__input",
             'xpath=//input[contains(@class,"searchInput__input") and (@placeholder="Wpisz wyszukiwany tekst" or @placeholder="Type your search here")]',
             'xpath=(//input[contains(@class,"searchInput__input")])[1]',
         ]
@@ -57,7 +87,13 @@ class FlashscoreKeywords:
                     return sel + " >> nth=0"
             except Exception:
                 pass
-            if self.rk("Run Keyword And Return Status", "Wait For Elements State", sel, "visible", "3s"):
+            if self.rk(
+                "Run Keyword And Return Status",
+                "Wait For Elements State",
+                sel,
+                "visible",
+                "3s",
+            ):
                 return sel
         raise AssertionError("Nie znalazłem pola wyszukiwania (searchInput__input)")
 
@@ -69,35 +105,69 @@ class FlashscoreKeywords:
         inp = self._first_search_input_locator()
         self.rk("Click", inp)
         self.rk("Fill Text", inp, league_name)
-        self.rk("Run Keyword And Return Status", "Wait For Elements State", "css=.searchResults", "visible", "10s")
+        self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            "css=.searchResults",
+            "visible",
+            "10s",
+        )
         exact = f'css=.searchResults a.searchResult >> text="{league_name}"'
-        first_any = 'css=.searchResults a.searchResult >> nth=0'
-        if self.rk("Run Keyword And Return Status", "Wait For Elements State", exact, "visible", "6s"):
+        first_any = "css=.searchResults a.searchResult >> nth=0"
+        if self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            exact,
+            "visible",
+            "6s",
+        ):
             self.rk("Click", exact)
-        elif self.rk("Run Keyword And Return Status", "Wait For Elements State", first_any, "visible", "6s"):
+        elif self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            first_any,
+            "visible",
+            "6s",
+        ):
             self.rk("Click", first_any)
         else:
             raise AssertionError("Nie znaleziono pozycji do kliknięcia w wynikach")
 
     def open_standings_tab(self):
-        if self.rk("Run Keyword And Return Status", "Wait For Elements State", "css=a.standings_table.selected",
-                   "visible", "2s"):
+        if self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            "css=a.standings_table.selected",
+            "visible",
+            "2s",
+        ):
             log_info("Zakładka Tabela już wybrana")
             return
 
         targets = [
             "css=a.standings_table",
-            'css=a.tabs__tab.standings_table',
+            "css=a.tabs__tab.standings_table",
             'css=a[href*="/tabela/"]',
             'css=a[href*="/standings/"]',
-            'text=Tabela',
-            'text=Standings',
-            'text=Table',
+            "text=Tabela",
+            "text=Standings",
+            "text=Table",
         ]
         for t in targets:
-            if self.rk("Run Keyword And Return Status", "Wait For Elements State", t, "visible", "3s"):
+            if self.rk(
+                "Run Keyword And Return Status",
+                "Wait For Elements State",
+                t,
+                "visible",
+                "3s",
+            ):
                 self.rk("Click", t)
-                self.rk("Wait For Elements State", "css=a.standings_table.selected", "visible", "10s")
+                self.rk(
+                    "Wait For Elements State",
+                    "css=a.standings_table.selected",
+                    "visible",
+                    "10s",
+                )
                 log_info("Przełączyłem na zakładkę Tabela")
                 return
         raise AssertionError("Nie znalazłem zakładki Tabela/Standings/Table")
@@ -108,16 +178,32 @@ class FlashscoreKeywords:
         try:
             self.open_standings_tab()
         except Exception as e:
-            log_info(f"Nie można było kliknąć zakładki Tabela (może nie istnieje lub już jest aktywna): {e}")
+            log_info(
+                f"Nie można było kliknąć zakładki Tabela (może nie istnieje lub już jest aktywna): {e}"
+            )
         root = "css=#tournament-table .ui-table"
-        ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", root, "visible", "10s")
+        ok = self.rk(
+            "Run Keyword And Return Status",
+            "Wait For Elements State",
+            root,
+            "visible",
+            "10s",
+        )
         if not ok:
             root = "css=.ui-table"
-            ok = self.rk("Run Keyword And Return Status", "Wait For Elements State", root, "visible", "10s")
+            ok = self.rk(
+                "Run Keyword And Return Status",
+                "Wait For Elements State",
+                root,
+                "visible",
+                "10s",
+            )
             if not ok:
                 log_info("Nie znaleziono kontenera tabeli .ui-table na stronie.")
                 return []
-        sentinel_selector = f"{root} .ui-table__row >> .tableCellParticipant__name >> nth=0"
+        sentinel_selector = (
+            f"{root} .ui-table__row >> .tableCellParticipant__name >> nth=0"
+        )
         try:
             self.rk("Wait For Elements State", sentinel_selector, "visible", "10s")
             log_info("Tabela (nazwy drużyn) w pełni załadowana.")
@@ -131,6 +217,7 @@ class FlashscoreKeywords:
                 return " ".join(val.split())
             except Exception:
                 return ""
+
         rows_cnt = int(self.rk("Get Element Count", f"{root} .ui-table__row") or 0)
         log_info(f"Znaleziono {rows_cnt} wierszy w tabeli. Rozpoczynam pętlę.")
         data = []
@@ -147,7 +234,7 @@ class FlashscoreKeywords:
             row_dict = {
                 "Team": team,
                 "Matches": get_text(matches_sel),
-                "Points": get_text(points_sel)
+                "Points": get_text(points_sel),
             }
             data.append(row_dict)
             log_info(f"  Pobrano: {row_dict}")
