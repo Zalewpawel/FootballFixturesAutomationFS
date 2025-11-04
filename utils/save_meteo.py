@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import openmeteo_requests
 import requests_cache
@@ -12,6 +13,20 @@ openmeteo = openmeteo_requests.Client(session=retry_session)
 
 
 def get_meteo_data(latitude, longitude):
+    """
+    Fetches current weather data for specific coordinates.
+
+    Connects to the Open-Meteo API and retrieves the current 2-meter
+    temperature. It requests Fahrenheit and calculates Celsius.
+
+    Args:
+        latitude (float): The latitude coordinate.
+        longitude (float): The longitude coordinate.
+
+    Returns:
+        dict | None: A dictionary containing parsed weather data if successful,
+                    or None if an error occurred.
+    """
     params = {
         "latitude": latitude,
         "longitude": longitude,
@@ -40,5 +55,5 @@ def get_meteo_data(latitude, longitude):
         }
         return parsed_data
     except Exception as e:
-        print(f"  BŁĄD API Meteo dla ({latitude}, {longitude}): {e}")
+        logging.error(f"Meteo API Error for ({latitude}, {longitude}): {e}")
         return None
