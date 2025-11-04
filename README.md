@@ -22,7 +22,8 @@ Ruff (Linting/Formatting)
 
 1. Configuration
 
-Clone the repo: git clone https://github.com/Zalewpawel/FootballFixturesAutomationFS.git cd FootballFixturesAutomationFS
+Clone the repo: git clone https://github.com/Zalewpawel/FootballFixturesAutomationFS.git 
+cd FootballFixturesAutomationFS
 
 Edit Config/input.json to list the leagues you want to process.
 
