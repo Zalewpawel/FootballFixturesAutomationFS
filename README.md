@@ -1,7 +1,9 @@
 Football Fixtures Automation
+
 This project automates fetching football league standings from Flashscore and current weather data from Open-Meteo. It reads a list of leagues from input.json, scrapes the data using Robot Framework, queries the weather API, and saves the combined results into timestamped folders containing an .xlsx report and a .json weather log.
 
 🛠️ Tech Stack
+
 Python
 
 Robot Framework
