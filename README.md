@@ -38,6 +38,6 @@ rfbrowser init
 
 python Main.py
 
-4. Output
+3. Output
 
 All results will be saved in the Data/ directory. Each league will have its own timestamped folder containing the final .xlsx report and the meteo.json log.
